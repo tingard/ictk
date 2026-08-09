@@ -1,0 +1,223 @@
+.ictk-icon {
+  /* inline-grid (not grid): keeps icons sitting inline among siblings, same
+     as the old display: inline-block, while still being a grid formatting
+     context for its own children. */
+  display: inline-grid;
+  /* minmax(0, 1fr), not bare 1fr: bare 1fr is shorthand for minmax(auto, 1fr),
+     and that `auto` minimum makes the track grow to fit its content — found
+     the hard way via a real-browser test (gridLayout.browser.test.tsx) with
+     an unbreakable long string in a modifier, which blew the frame column
+     out to 615px. minmax(0, 1fr) pins the minimum to a definite 0, which
+     opts the track out of content-based sizing entirely, matching how the
+     0px side/top/bottom tracks below already behave. */
+  grid-template-columns: 0px minmax(0, 1fr) 0px;
+  grid-template-rows: 0px repeat(5, minmax(0, 1fr)) 0px 0px;
+  grid-template-areas:
+    ".  T      ."
+    "L0 frame  R0"
+    "L1 frame  R1"
+    "L2 frame  R2"
+    "L3 frame  R3"
+    "L4 frame  R4"
+    ".  B0     ."
+    ".  B1     .";
+  /* width/height come from the `size` prop via inline style, not from here.
+     The side/top/bottom tracks are fixed at 0px, and the middle
+     column/rows are pinned via minmax(0, ...) above — no track grows to
+     fit content, so amplifiers can spill outside this box without ever
+     growing it. That, plus overflow staying visible (the default — don't
+     override it here), is what keeps this box exactly size x size
+     regardless of amplifier content. This is load-bearing for the
+     map-marker anchor invariant documented on the `size` prop in types.ts —
+     the frame area (grid-area: frame) always fills the full box because it
+     spans all five middle rows and the single middle column. */
+  overflow: visible;
+  /* size / 5, not size / 6: web cartography guidance (Esri, "Guidelines
+     for minimum size for text and symbols on maps") puts the legibility
+     floor for on-screen map type at 10px capital height (~14px font-size,
+     since cap height runs ~70% of font-size for common typefaces) — a
+     bigger ratio than size/6 reads better against that. This is a
+     proportional *default*, not an enforced minimum — deliberately no
+     clamp here. A hard floor would make labels outsize small icons (a
+     real problem we hit and reverted), and consumers who need a
+     guaranteed size for specific content can just style that content
+     directly (icon/modifierTop/modifierBottom/amplifiers all accept
+     arbitrary ReactNode) rather than rely on this ratio to guarantee it.
+
+     size/5, not bigger (e.g. the size/3 tried first): a HARD ceiling, not
+     just a preference — L0-L4/R0-R4 share the frame's height across 5
+     equal rows (see grid-template-rows above), so amplifier font-size
+     (0.7em of this) must stay under roughly size/5 or adjacent amplifiers
+     in the same column collide. Caught by the pairwise-overlap test in
+     gridLayout.browser.test.tsx when size/3 was tried — that test exists
+     for exactly this. */
+  font-size: calc(var(--ictk-size, 64px) / 5);
+}
+
+/* A frame is a pure backdrop shape — it never receives icon/modifier
+   content (Icon never reads or clones a frame's props; see the `frame` doc
+   comment on IconProps in types.ts), so unlike .ictk-icon-core below it has
+   nothing that could trigger grid's "automatic minimum size" blowout and
+   doesn't need position/min-width/min-height guards for that. */
+.ictk-frame {
+  grid-area: frame;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* Shape styling (border-radius, clip-path, ...) lives on each frame
+   component via FrameBase's `style` prop, not here — keeps every frame's
+   shape definition colocated with the component, so a third-party frame
+   package needs zero knowledge of this stylesheet beyond the .ictk-frame
+   class FrameBase already applies. */
+
+/* Shares .ictk-frame's grid cell (grid-area: frame) but is a separate
+   sibling in the DOM, painted on top of the frame — see IconCore.tsx and
+   Icon.tsx. icon-content and both modifiers are independently anchored
+   here rather than stacked via flex, so the icon stays exactly centered
+   regardless of which modifiers are present — matches the reference figure
+   (static/app6d-icons-and-modifiers-location.png): MAIN never moves
+   whether 1, 2, both, or neither of the surrounding modifiers are shown. */
+.ictk-icon-core {
+  grid-area: frame;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  box-sizing: border-box;
+  /* min-width/min-height: 0, not overflow: hidden: a grid item's
+     "automatic minimum size" defaults to its content's min-content size,
+     which could force this wider/taller than its grid area even with the
+     minmax(0, ...) tracks on .ictk-icon pinned. overflow: hidden would
+     also fix that, but would clip oversized content invisibly, silently
+     hiding a misconfigured marker from the developer — this way the box
+     still can't grow, but oversized content stays visible, overflowing
+     past it (a loud failure, not a silent one). */
+  min-width: 0;
+  min-height: 0;
+}
+
+.ictk-icon-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ictk-modifier--top,
+.ictk-modifier--bottom {
+  position: absolute;
+  left: 50%;
+  line-height: 1;
+}
+.ictk-modifier--top {
+  top: 20%;
+  transform: translate(-50%, -50%);
+}
+.ictk-modifier--bottom {
+  top: 80%;
+  transform: translate(-50%, -50%);
+}
+
+.ictk-amplifier {
+  white-space: nowrap;
+  /* 0.7em of the (proportional, unclamped) base font-size — see the
+     font-size comment on .ictk-icon for why this is a proportional
+     default rather than an enforced minimum. */
+  font-size: 0.7em;
+  line-height: 1;
+}
+
+.ictk-amplifier--T {
+  grid-area: T;
+}
+.ictk-amplifier--B0 {
+  grid-area: B0;
+}
+.ictk-amplifier--B1 {
+  grid-area: B1;
+}
+.ictk-amplifier--L0 {
+  grid-area: L0;
+}
+.ictk-amplifier--L1 {
+  grid-area: L1;
+}
+.ictk-amplifier--L2 {
+  grid-area: L2;
+}
+.ictk-amplifier--L3 {
+  grid-area: L3;
+}
+.ictk-amplifier--L4 {
+  grid-area: L4;
+}
+.ictk-amplifier--R0 {
+  grid-area: R0;
+}
+.ictk-amplifier--R1 {
+  grid-area: R1;
+}
+.ictk-amplifier--R2 {
+  grid-area: R2;
+}
+.ictk-amplifier--R3 {
+  grid-area: R3;
+}
+.ictk-amplifier--R4 {
+  grid-area: R4;
+}
+
+/* T/B0/B1 live in 0-height rows: center horizontally over the frame, then
+   grow up (T) or down (B0/B1) out of the box. */
+.ictk-amplifier--T,
+.ictk-amplifier--B0,
+.ictk-amplifier--B1 {
+  justify-self: center;
+}
+.ictk-amplifier--T {
+  align-self: end;
+}
+.ictk-amplifier--B0,
+.ictk-amplifier--B1 {
+  align-self: start;
+}
+/* B0 and B1 are both 0-height rows at the same grid line, so without this
+   they'd render fully overlapping — nudge B1 down by roughly a line height.
+   A transform, not row height, so it stays visual-only and doesn't reopen
+   the blowout this track's 0px sizing exists to prevent. */
+.ictk-amplifier--B1 {
+  transform: translateY(1.2em);
+}
+
+/* L and R slots live in 0-width columns: center vertically on their row,
+   then grow left (L) or right (R) out of the box. */
+.ictk-amplifier--L0,
+.ictk-amplifier--L1,
+.ictk-amplifier--L2,
+.ictk-amplifier--L3,
+.ictk-amplifier--L4,
+.ictk-amplifier--R0,
+.ictk-amplifier--R1,
+.ictk-amplifier--R2,
+.ictk-amplifier--R3,
+.ictk-amplifier--R4 {
+  align-self: center;
+}
+.ictk-amplifier--L0,
+.ictk-amplifier--L1,
+.ictk-amplifier--L2,
+.ictk-amplifier--L3,
+.ictk-amplifier--L4 {
+  justify-self: end;
+}
+.ictk-amplifier--R0,
+.ictk-amplifier--R1,
+.ictk-amplifier--R2,
+.ictk-amplifier--R3,
+.ictk-amplifier--R4 {
+  justify-self: start;
+}

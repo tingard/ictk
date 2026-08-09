@@ -1,0 +1,16 @@
+packages:
+  - .
+  - examples/*
+
+# Only these packages' install/postinstall scripts are allowed to run.
+# Both are trusted toolchain deps whose postinstall just fetches a
+# platform-specific native binary (no script runs for anything else).
+allowBuilds:
+  '@biomejs/biome': true
+  esbuild: true
+
+# Supply-chain hardening: refuse to install any dependency version
+# published less than 14 days ago, so newly-published malicious
+# releases have time to be caught and yanked before we can pull them in.
+# 14 days * 24h * 60m = 20160 minutes.
+minimumReleaseAge: 20160
