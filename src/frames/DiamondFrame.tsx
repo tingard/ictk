@@ -1,8 +1,12 @@
 import type { FrameBaseProps } from './FrameBase';
 import { FrameBase } from './FrameBase';
 
-export function DiamondFrame({ fill }: Pick<FrameBaseProps, 'fill'>) {
+export function DiamondFrame({ fill, stroke }: Pick<FrameBaseProps, 'fill' | 'stroke'>) {
   return (
-    <FrameBase fill={fill} style={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }} />
+    <FrameBase
+      fill={fill}
+      stroke={stroke}
+      shape={{ kind: 'polygon', points: '50,0 100,50 50,100 0,50' }}
+    />
   );
 }

@@ -64,6 +64,13 @@
   width: 100%;
   height: 100%;
   box-sizing: border-box;
+  /* SVG roots default to overflow: hidden, which clips half of any stroke
+     drawn on a shape that touches the viewBox edge (stroke straddles the
+     path boundary — half paints outside it). Same pattern used everywhere
+     else in this file: visible only affects painting, not this element's
+     own getBoundingClientRect, so the size x size box invariant holds
+     regardless. */
+  overflow: visible;
 }
 
 /* Shape styling (border-radius, clip-path, ...) lives on each frame

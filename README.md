@@ -98,39 +98,54 @@ The frame always renders at exactly `size x size`, anchored at its own center �
 
 | Component | Shape | Notes |
 | --- | --- | --- |
-| `SquareFrame` | Rounded square | |
+| `SquareFrame` | Square | |
 | `CircleFrame` | Circle | |
 | `HexagonFrame` | Flat-top hexagon | |
-| `DiamondFrame` | Diamond | A rotated square via `clip-path`, not `transform: rotate`, so content inside stays upright |
+| `DiamondFrame` | Diamond | An SVG `polygon`, not a `transform: rotate`d square, so content inside stays upright |
 | `CupFrame` | Flat top, rounded bottom | The sea-subsurface silhouette from NATO's own guidance |
 | `CapFrame` | Rounded top, flat bottom | The air silhouette from that same guidance; the inverse of `CupFrame` |
 
-Each accepts a single `fill` prop — a `Fill` (solid color, gradient, image, or atlas coordinates; see the API reference below).
+Each accepts `fill` and `stroke` props (a `Fill` — solid color, gradient, image, or atlas coordinates — and a `Stroke`; see the API reference below).
 
 ICTK intentionally stops there. NATO's own guidance for map icons defines a much larger vocabulary of frame shapes — diamonds with corner ticks, houses, inverted houses, quatrefoils ("clovers"), and more (see `static/app6d-standard-identifiers.png` for the full reference table) — but ICTK isn't aiming for full parity with it. If you need full-fidelity military symbology, a dedicated library like [`milsymbol`](https://spatialillusions.com/milsymbol/) is a better fit. ICTK's value is being a lightweight, generalized composition system — and since a frame is just a component, nothing stops you from building the shapes you need yourself (see below).
 
 ## Extending: custom frames
 
-A frame is any component that renders something carrying the `ictk-frame` class — that's the only real requirement, and it's a runtime/CSS contract, not something TypeScript enforces. `FrameBase` is the supported way to satisfy it without needing to know that detail:
+A frame is any component that renders something carrying the `ictk-frame` class — that's the only real requirement, and it's a runtime/CSS contract, not something TypeScript enforces. `FrameBase` is the supported way to satisfy it without needing to know that detail. Frame shapes are real SVG (`rect`/`circle`/`polygon`/`path`), not CSS `clip-path` on a `div` — a CSS `border` never follows an angular `clip-path` correctly (it's drawn on the element's original rectangular border-box regardless of the clip), while SVG `stroke` follows any shape's actual outline:
 
 ```tsx
 import { FrameBase, type FrameBaseProps } from 'ictk';
 
-export function HouseFrame({ fill }: Pick<FrameBaseProps, 'fill'>) {
+export function HouseFrame({ fill, stroke }: Pick<FrameBaseProps, 'fill' | 'stroke'>) {
   return (
     <FrameBase
       fill={fill}
-      style={{ clipPath: 'polygon(0% 40%, 50% 0%, 100% 40%, 100% 100%, 0% 100%)' }}
+      stroke={stroke}
+      shape={{ kind: 'path', d: 'M0,40 L50,0 L100,40 L100,100 L0,100 Z' }}
     />
   );
 }
 ```
 
-`FrameBase` applies the `ictk-frame` class (grid placement and sizing within `<Icon />`) and resolves `fill` into a background style — you only supply the shape via `style` (`clipPath`, `borderRadius`, ...). This is deliberately the whole contract: it depends on nothing from `<Icon />` internals, so a set of custom frames (a full NATO-shape-vocabulary pack, a client-specific icon set, whatever) is easy to publish as its own separate package that depends on `ictk` for `FrameBase`/`FrameBaseProps` and nothing else. `fill` itself is just `FrameBase`'s convenience, not something `<Icon />` requires — a custom frame is free to ignore it and accept its own coloring prop entirely.
+`FrameBase` applies the `ictk-frame` class (grid placement and sizing within `<Icon />`), resolves `fill` into an SVG paint (a color, or a generated `<linearGradient>`/`<pattern>` for gradient/image/atlas fills), and renders `shape` — a normalized 0-100 viewBox coordinate space, so it scales correctly regardless of the icon's actual `size`. `shape` accepts `{ kind: 'rect', rx? }`, `{ kind: 'circle' }`, `{ kind: 'polygon', points }`, or `{ kind: 'path', d }`, matching the underlying SVG elements directly. This is deliberately the whole contract: it depends on nothing from `<Icon />` internals, so a set of custom frames (a full NATO-shape-vocabulary pack, a client-specific icon set, whatever) is easy to publish as its own separate package that depends on `ictk` for `FrameBase`/`FrameBaseProps` and nothing else. `fill`/`stroke` are just `FrameBase`'s convenience, not something `<Icon />` requires — a custom frame is free to skip `FrameBase` entirely and render its own SVG/DOM, as long as it carries the `ictk-frame` class.
+
+For any regular polygon (pentagon, octagon, whatever NATO shape you're missing), skip hand-plotting `points` and use `nGonPoints`, the same helper `SquareFrame`/`HexagonFrame` are built on:
+
+```tsx
+import { FrameBase, nGonPoints, type FrameBaseProps } from 'ictk';
+
+const PENTAGON_POINTS = nGonPoints(5, { rotation: -90 }); // point straight up
+
+export function PentagonFrame({ fill, stroke }: Pick<FrameBaseProps, 'fill' | 'stroke'>) {
+  return <FrameBase fill={fill} stroke={stroke} shape={{ kind: 'polygon', points: PENTAGON_POINTS }} />;
+}
+```
+
+`nGonPoints(n, { cx, cy, radius, rotation })` places `n` vertices around a center (defaulting to the middle of the 0-100 box, radius 50 — touching the box edges), `rotation` in degrees along SVG's angle convention. It's worth noting `radius` is the distance to each *vertex* (the circumradius), not to an edge's midpoint — that's why `SquareFrame` uses `radius: 50 * Math.SQRT2` to reach the corners of an axis-aligned box, and it's why `SquareFrame` no longer has rounded corners (that used `<rect rx>`; a plain `polygon` can't round corners the same way).
 
 ## Fail-loud, not silent
 
-Oversized content (a modifier string too long for its icon, an amplifier that doesn't fit) stays **visible and overflowing**, rather than being clipped. The frame uses `min-width`/`min-height: 0` rather than `overflow: hidden` specifically for this reason: silently clipping content would hide a misconfigured marker from the developer, which is the opposite of fail-safe. If something looks broken, it's supposed to look broken.
+Oversized content (a modifier string too long for its icon, an amplifier that doesn't fit) stays **visible and overflowing**, rather than being clipped. The layer holding icon/modifier content uses `min-width`/`min-height: 0` rather than `overflow: hidden` specifically for this reason: silently clipping content would hide a misconfigured marker from the developer, which is the opposite of fail-safe. If something looks broken, it's supposed to look broken.
 
 ## API reference
 
@@ -154,7 +169,25 @@ type Fill =
   | string // any CSS color
   | { type: 'gradient'; stops: { offset: number; color: string }[]; angle?: number }
   | { type: 'image'; src: string }
-  | { type: 'atlas'; src: string; x: number; y: number; width: number; height: number };
+  | {
+      type: 'atlas';
+      src: string;
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      naturalWidth: number; // the atlas image's own pixel dimensions
+      naturalHeight: number;
+    };
+```
+
+### `Stroke`
+
+```ts
+interface Stroke {
+  color: string;
+  width: number; // a fixed pixel width regardless of icon size
+}
 ```
 
 ### `FrameBase`
@@ -162,8 +195,15 @@ type Fill =
 ```ts
 interface FrameBaseProps {
   fill?: Fill;
-  style?: CSSProperties;
+  stroke?: Stroke;
+  shape: FrameShape;
 }
+
+type FrameShape =
+  | { kind: 'rect'; rx?: number }
+  | { kind: 'circle' }
+  | { kind: 'polygon'; points: string }
+  | { kind: 'path'; d: string };
 ```
 
 ## Development

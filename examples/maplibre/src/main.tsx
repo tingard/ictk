@@ -1,4 +1,4 @@
-import { DiamondFrame, HexagonFrame, Icon } from 'ictk';
+import { HexagonFrame, Icon } from 'ictk';
 import 'ictk/style.css';
 // maplibre-gl v6 dropped the default `maplibregl` export in favor of named
 // exports (Map, Marker, ...) — no more `import maplibregl from 'maplibre-gl'`.
@@ -13,9 +13,8 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import { createRoot } from 'react-dom/client';
 import { type LngLat, bearingBetween, lerpLngLat } from './geo';
-import { BatteryIcon, BearingArrow, SignalBars } from './statusIcons';
-import { icons as materialIcons } from "@iconify-json/material-symbols";
-import { Icon as IconifyIcon } from "@iconify/react";
+import { BatteryIcon, SignalBars } from './statusIcons';
+import { Icon as IconifyIcon } from '@iconify/react';
 
 setWorkerUrl(workerUrl);
 
@@ -24,8 +23,8 @@ setWorkerUrl(workerUrl);
 // atlas, just a real React tree that MapLibre repositions on pan/zoom. This
 // scenario: a Meshtastic-style LoRa mesh of fixed receiver nodes scattered
 // over Dartmoor, each showing live-looking signal/battery status via
-// amplifier slots, plus one moving unit whose bearing amplifier tracks its
-// direction of travel in real time.
+// amplifier slots, plus one moving unit which has updating amplifiers and an
+// animated frame which rotates to match its bearing in real time.
 
 const statusEl = document.createElement('div');
 statusEl.id = 'status';
@@ -47,7 +46,25 @@ document.body.appendChild(statusEl);
 // Dartmoor National Park, Devon, UK — centered roughly on Princetown.
 const map = new MapLibreMap({
   container: 'map',
-  style: 'https://demotiles.maplibre.org/style.json',
+  style: {
+    version: 8,
+    sources: {
+      satellite: {
+        type: 'raster',
+        tiles: [
+          'https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/{z}/{y}/{x}.jpg',
+        ],
+        tileSize: 256,
+      },
+    },
+    layers: [
+      {
+        id: 'satellite',
+        type: 'raster',
+        source: 'satellite',
+      },
+    ],
+  },
   center: [-3.9, 50.58],
   zoom: 10.4,
 });
@@ -95,8 +112,24 @@ for (const receiver of makeReceiverGrid()) {
   createRoot(el).render(
     <Icon
       size={40}
-      frame={<HexagonFrame fill="#2f6fe0" />}
-      icon={<span style={{ color: '#fff', fontWeight: 700 }}>{receiver.id}</span>}
+      frame={
+        <HexagonFrame
+          fill="#2f6fe0"
+          stroke={{ color: "white", width: 2 }}
+        />
+      }
+      modifierBottom={<span style={{ color: "white" }}>{receiver.id}</span>}
+      icon={
+        <IconifyIcon
+          icon="icon-park-outline:receiver"
+          height="none"
+          style={{
+            width: '12px',
+            height: '12px',
+            color: 'white',
+          }}
+        />
+      }
       amplifiers={{
         L0: <SignalBars strength={receiver.signal} />,
         L4: <BatteryIcon level={receiver.battery} />,
@@ -129,15 +162,26 @@ function renderMovingUnit(bearing: number) {
   movingRoot.render(
     <Icon
       size={64}
-      frame={<IconifyIcon
-          icon="material-symbols:flight-rounded"
+      frame={
+        <IconifyIcon
+          icon="ic:outline-airplanemode-active"
           height="none"
-          style={{ width: '64px', height: '64px', transform: `rotate(${bearing}deg)` }}
-      />}
-          amplifiers={{
-              R4: <span>{bearing.toFixed(1)}&deg;</span>,
-              R1: <span>100kts</span>
+          style={{
+            width: '64px',
+            height: '64px',
+            transform: `rotate(${bearing}deg)`,
+            color: 'white',
           }}
+        />
+      }
+      amplifiers={{
+        R4: (
+          <span style={{ backgroundColor: 'white', padding: '3px' }}>
+            {bearing.toFixed(1)}&deg;
+          </span>
+        ),
+        R1: <span style={{ backgroundColor: 'white', padding: '3px' }}>100kts</span>,
+      }}
     />,
   );
 }

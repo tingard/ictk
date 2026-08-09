@@ -15,7 +15,7 @@ export function SignalBars({ strength }: { strength: number }) {
             y={14 - h}
             width={3}
             height={h}
-            fill={i < strength ? '#2ecc71' : 'rgba(0,0,0,0.18)'}
+            fill={i < strength ? '#2ecc71' : 'rgba(10,10,10,0.7)'}
           />
         );
       })}
@@ -27,7 +27,12 @@ export function BatteryIcon({ level }: { level: number }) {
   const color = level < 20 ? '#e74c3c' : level < 50 ? '#f39c12' : '#2ecc71';
   const fillWidth = Math.max(1, (level / 100) * 14);
   return (
-    <svg width="20" height="12" viewBox="0 0 20 12" style={{ display: 'block' }}>
+    <svg
+      width="20"
+      height="12"
+      viewBox="0 0 20 12"
+      style={{ display: 'block' }}
+    >
       <title>{`Battery: ${level}%`}</title>
       <rect
         x="0.5"
@@ -35,27 +40,12 @@ export function BatteryIcon({ level }: { level: number }) {
         width="17"
         height="11"
         rx="1.5"
-        fill="none"
-        stroke="#333"
+        fill="#000"
+        stroke="#eee"
         strokeWidth="1"
       />
-      <rect x="18" y="4" width="1.5" height="4" fill="#333" />
+      <rect x="18" y="4" width="1.5" height="4" fill="#eee" />
       <rect x="2" y="2" width={fillWidth} height="8" fill={color} />
-    </svg>
-  );
-}
-
-/** Points up (north) at bearing 0, rotates clockwise with bearing in degrees. */
-export function BearingArrow({ bearing }: { bearing: number }) {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      style={{ transform: `rotate(${bearing}deg)`, transformOrigin: '50% 50%', display: 'block' }}
-    >
-      <title>{`Bearing: ${Math.round(bearing)}°`}</title>
-      <polygon points="10,1 15,17 10,13 5,17" fill="#1b2c42" stroke="#fff" strokeWidth="0.5" />
     </svg>
   );
 }
