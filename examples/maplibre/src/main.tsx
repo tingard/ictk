@@ -14,6 +14,8 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import { createRoot } from 'react-dom/client';
 import { type LngLat, bearingBetween, lerpLngLat } from './geo';
 import { BatteryIcon, BearingArrow, SignalBars } from './statusIcons';
+import { icons as materialIcons } from "@iconify-json/material-symbols";
+import { Icon as IconifyIcon } from "@iconify/react";
 
 setWorkerUrl(workerUrl);
 
@@ -96,8 +98,8 @@ for (const receiver of makeReceiverGrid()) {
       frame={<HexagonFrame fill="#2f6fe0" />}
       icon={<span style={{ color: '#fff', fontWeight: 700 }}>{receiver.id}</span>}
       amplifiers={{
-        R0: <SignalBars strength={receiver.signal} />,
-        L0: <BatteryIcon level={receiver.battery} />,
+        L0: <SignalBars strength={receiver.signal} />,
+        L4: <BatteryIcon level={receiver.battery} />,
       }}
     />,
   );
@@ -126,10 +128,16 @@ const movingMarker = new Marker({ element: movingEl, anchor: 'center' })
 function renderMovingUnit(bearing: number) {
   movingRoot.render(
     <Icon
-      size={36}
-      frame={<DiamondFrame fill="#c0392b" />}
-      icon={<span style={{ color: '#fff', fontWeight: 700 }}>M</span>}
-      amplifiers={{ T: <BearingArrow bearing={bearing} /> }}
+      size={64}
+      frame={<IconifyIcon
+          icon="material-symbols:flight-rounded"
+          height="none"
+          style={{ width: '64px', height: '64px', transform: `rotate(${bearing}deg)` }}
+      />}
+          amplifiers={{
+              R4: <span>{bearing.toFixed(1)}&deg;</span>,
+              R1: <span>100kts</span>
+          }}
     />,
   );
 }
