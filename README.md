@@ -3,8 +3,8 @@
 **ICTK** (ICon ToolKit) is a React component library for composing map-marker icons — frame, fill, center icon, modifiers, and amplifiers — loosely generalized from NATO's own guidance for map icons. It's built for one specific job: dropping real, interactive icons onto WebGL map libraries like [MapLibre GL JS](https://maplibre.org/) and [deck.gl](https://deck.gl/) as live DOM markers, not rasterized bitmaps.
 
 ```tsx
-import { Icon, SquareFrame } from 'ictk';
-import 'ictk/style.css';
+import { Icon, SquareFrame } from '@tingard/ictk';
+import '@tingard/ictk/style.css';
 
 <Icon
   frame={<SquareFrame fill="#c0392b" />}
@@ -54,7 +54,7 @@ Because ICTK targets that DOM-marker path specifically, `<Icon />` is just a nor
 ```tsx
 import { createRoot } from 'react-dom/client';
 import { Marker } from 'maplibre-gl';
-import { Icon, SquareFrame } from 'ictk';
+import { Icon, SquareFrame } from '@tingard/ictk';
 
 const el = document.createElement('div');
 createRoot(el).render(<Icon frame={<SquareFrame fill="#c0392b" />} icon={<span>A</span>} />);
@@ -114,7 +114,7 @@ ICTK intentionally stops there. NATO's own guidance for map icons defines a much
 A frame is any component that renders something carrying the `ictk-frame` class — that's the only real requirement, and it's a runtime/CSS contract, not something TypeScript enforces. `FrameBase` is the supported way to satisfy it without needing to know that detail. Frame shapes are real SVG (`rect`/`circle`/`polygon`/`path`), not CSS `clip-path` on a `div` — a CSS `border` never follows an angular `clip-path` correctly (it's drawn on the element's original rectangular border-box regardless of the clip), while SVG `stroke` follows any shape's actual outline:
 
 ```tsx
-import { FrameBase, type FrameBaseProps } from 'ictk';
+import { FrameBase, type FrameBaseProps } from '@tingard/ictk';
 
 export function HouseFrame({ fill, stroke }: Pick<FrameBaseProps, 'fill' | 'stroke'>) {
   return (
@@ -127,12 +127,12 @@ export function HouseFrame({ fill, stroke }: Pick<FrameBaseProps, 'fill' | 'stro
 }
 ```
 
-`FrameBase` applies the `ictk-frame` class (grid placement and sizing within `<Icon />`), resolves `fill` into an SVG paint (a color, or a generated `<linearGradient>`/`<pattern>` for gradient/image/atlas fills), and renders `shape` — a normalized 0-100 viewBox coordinate space, so it scales correctly regardless of the icon's actual `size`. `shape` accepts `{ kind: 'rect', rx? }`, `{ kind: 'circle' }`, `{ kind: 'polygon', points }`, or `{ kind: 'path', d }`, matching the underlying SVG elements directly. This is deliberately the whole contract: it depends on nothing from `<Icon />` internals, so a set of custom frames (a full NATO-shape-vocabulary pack, a client-specific icon set, whatever) is easy to publish as its own separate package that depends on `ictk` for `FrameBase`/`FrameBaseProps` and nothing else. `fill`/`stroke` are just `FrameBase`'s convenience, not something `<Icon />` requires — a custom frame is free to skip `FrameBase` entirely and render its own SVG/DOM, as long as it carries the `ictk-frame` class.
+`FrameBase` applies the `ictk-frame` class (grid placement and sizing within `<Icon />`), resolves `fill` into an SVG paint (a color, or a generated `<linearGradient>`/`<pattern>` for gradient/image/atlas fills), and renders `shape` — a normalized 0-100 viewBox coordinate space, so it scales correctly regardless of the icon's actual `size`. `shape` accepts `{ kind: 'rect', rx? }`, `{ kind: 'circle' }`, `{ kind: 'polygon', points }`, or `{ kind: 'path', d }`, matching the underlying SVG elements directly. This is deliberately the whole contract: it depends on nothing from `<Icon />` internals, so a set of custom frames (a full NATO-shape-vocabulary pack, a client-specific icon set, whatever) is easy to publish as its own separate package that depends on `@tingard/ictk` for `FrameBase`/`FrameBaseProps` and nothing else. `fill`/`stroke` are just `FrameBase`'s convenience, not something `<Icon />` requires — a custom frame is free to skip `FrameBase` entirely and render its own SVG/DOM, as long as it carries the `ictk-frame` class.
 
 For any regular polygon (pentagon, octagon, whatever NATO shape you're missing), skip hand-plotting `points` and use `nGonPoints`, the same helper `SquareFrame`/`HexagonFrame` are built on:
 
 ```tsx
-import { FrameBase, nGonPoints, type FrameBaseProps } from 'ictk';
+import { FrameBase, nGonPoints, type FrameBaseProps } from '@tingard/ictk';
 
 const PENTAGON_POINTS = nGonPoints(5, { rotation: -90 }); // point straight up
 
@@ -213,9 +213,9 @@ This is a pnpm workspace: the library lives at the repo root (`ictk`), with runn
 ```sh
 pnpm install
 
-pnpm --filter ictk typecheck
-pnpm --filter ictk lint
-pnpm --filter ictk test        # vitest (jsdom component tests) + real-Chromium
+pnpm --filter @tingard/ictk typecheck
+pnpm --filter @tingard/ictk lint
+pnpm --filter @tingard/ictk test        # vitest (jsdom component tests) + real-Chromium
                                 # Playwright tests for every CSS Grid layout
                                 # invariant — box size never grows with
                                 # content, amplifiers never overlap, the icon
@@ -223,7 +223,7 @@ pnpm --filter ictk test        # vitest (jsdom component tests) + real-Chromium
                                 # jsdom alone can't catch any of these; it
                                 # doesn't do real layout. (Chromium only for
                                 # now — see "Is ICTK for you?" above.)
-pnpm --filter ictk build
+pnpm --filter @tingard/ictk build
 
 pnpm --filter @ictk/example-maplibre dev   # live example at localhost:5173
 ```

@@ -27,12 +27,7 @@ export function BatteryIcon({ level }: { level: number }) {
   const color = level < 20 ? '#e74c3c' : level < 50 ? '#f39c12' : '#2ecc71';
   const fillWidth = Math.max(1, (level / 100) * 14);
   return (
-    <svg
-      width="20"
-      height="12"
-      viewBox="0 0 20 12"
-      style={{ display: 'block' }}
-    >
+    <svg width="20" height="12" viewBox="0 0 20 12" style={{ display: 'block' }}>
       <title>{`Battery: ${level}%`}</title>
       <rect
         x="0.5"

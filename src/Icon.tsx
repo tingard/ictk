@@ -30,7 +30,7 @@ export const Icon = memo(function Icon({
     height: size,
     // Also set as a CSS var so styles.css can scale amplifier font-size/
     // offsets (in em) with icon size, independent of the ambient page font.
-    // Requires importing 'ictk/style.css'; width/height above don't.
+    // Requires importing '@tingard/ictk/style.css'; width/height above don't.
     '--ictk-size': `${size}px`,
   };
 

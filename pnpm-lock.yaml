@@ -56,7 +56,7 @@ importers:
 
   examples/maplibre:
     dependencies:
-      ictk:
+      '@tingard/ictk':
         specifier: workspace:*
         version: link:../..
       maplibre-gl:

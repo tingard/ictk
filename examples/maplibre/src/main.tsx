@@ -1,9 +1,10 @@
-import { HexagonFrame, Icon } from 'ictk';
-import 'ictk/style.css';
+import { HexagonFrame, Icon } from '@tingard/ictk';
+import '@tingard/ictk/style.css';
 // maplibre-gl v6 dropped the default `maplibregl` export in favor of named
 // exports (Map, Marker, ...) — no more `import maplibregl from 'maplibre-gl'`.
 import { Map as MapLibreMap, Marker, setWorkerUrl } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { Icon as IconifyIcon } from '@iconify/react';
 // Under Vite, MapLibre's own worker-resolution fails silently (the error
 // surfaces in the worker's own DevTools console context, not the main
 // page's) — no style/tile requests ever fire and there's no visible error
@@ -14,7 +15,6 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import { createRoot } from 'react-dom/client';
 import { type LngLat, bearingBetween, lerpLngLat } from './geo';
 import { BatteryIcon, SignalBars } from './statusIcons';
-import { Icon as IconifyIcon } from '@iconify/react';
 
 setWorkerUrl(workerUrl);
 
@@ -112,13 +112,8 @@ for (const receiver of makeReceiverGrid()) {
   createRoot(el).render(
     <Icon
       size={40}
-      frame={
-        <HexagonFrame
-          fill="#2f6fe0"
-          stroke={{ color: "white", width: 2 }}
-        />
-      }
-      modifierBottom={<span style={{ color: "white" }}>{receiver.id}</span>}
+      frame={<HexagonFrame fill="#2f6fe0" stroke={{ color: 'white', width: 2 }} />}
+      modifierBottom={<span style={{ color: 'white' }}>{receiver.id}</span>}
       icon={
         <IconifyIcon
           icon="icon-park-outline:receiver"
