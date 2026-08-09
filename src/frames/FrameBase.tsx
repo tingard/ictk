@@ -23,17 +23,16 @@ export interface FrameBaseProps {
  * through. Handles the `ictk-frame` class (required for grid placement and
  * sizing within Icon; see styles.css) and renders `shape` as real SVG
  * (rect/circle/polygon/path), so `stroke` follows the actual outline
- * correctly for every shape — unlike a CSS `border` on a `clip-path`
- * div, which is drawn on the element's original rectangular border-box
- * and never follows an angular clip shape (that's a real CSS limitation,
- * not something fixable while frames were div+clip-path — the reason this
- * moved to SVG). `fill` is a convenience this shell offers, not something
- * Icon itself requires — Icon never reads a frame's props (see the `frame`
- * doc comment on IconProps), so a custom frame is free to skip FrameBase
- * entirely and render its own SVG/DOM, as long as it carries the
- * `ictk-frame` class. This is the officially supported extension point for
- * publishing additional frame shapes as a separate package, though — using
- * it means zero dependence on Icon internals.
+ * correctly for every shape — a CSS `border` can't do this on an angular
+ * shape, since it's drawn on the element's rectangular border-box
+ * regardless of any `clip-path` applied to it. `fill` is a convenience
+ * this shell offers, not something Icon itself requires — Icon never
+ * reads a frame's props (see the `frame` doc comment on IconProps), so a
+ * custom frame is free to skip FrameBase entirely and render its own
+ * SVG/DOM, as long as it carries the `ictk-frame` class. This is the
+ * officially supported extension point for publishing additional frame
+ * shapes as a separate package — using it means zero dependence on Icon
+ * internals.
  */
 export function FrameBase({ fill, stroke, shape }: FrameBaseProps) {
   const { paint, defs } = useFillPaint(fill);

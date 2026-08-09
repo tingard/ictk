@@ -1,7 +1,7 @@
 import type { FrameBaseProps } from './FrameBase';
 import { FrameBase } from './FrameBase';
 
-/** Rounded top, flat bottom — the air silhouette from that same guidance; the inverse of CupFrame. */
+/** Rounded top, flat bottom — the air silhouette from NATO's own guidance for map icons; the inverse of CupFrame. */
 export function CapFrame({ fill, stroke }: Pick<FrameBaseProps, 'fill' | 'stroke'>) {
   return (
     <FrameBase

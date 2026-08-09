@@ -4,12 +4,13 @@
      context for its own children. */
   display: inline-grid;
   /* minmax(0, 1fr), not bare 1fr: bare 1fr is shorthand for minmax(auto, 1fr),
-     and that `auto` minimum makes the track grow to fit its content — found
-     the hard way via a real-browser test (gridLayout.browser.test.tsx) with
-     an unbreakable long string in a modifier, which blew the frame column
-     out to 615px. minmax(0, 1fr) pins the minimum to a definite 0, which
-     opts the track out of content-based sizing entirely, matching how the
-     0px side/top/bottom tracks below already behave. */
+     and that `auto` minimum lets the track grow to fit an oversized child
+     (e.g. an unbreakable long string in a modifier), which would break the
+     size x size box invariant below. minmax(0, 1fr) pins the minimum to a
+     definite 0, opting the track out of content-based sizing entirely,
+     matching how the 0px side/top/bottom tracks already behave —
+     gridLayout.browser.test.tsx verifies this holds even with oversized
+     content in every slot. */
   grid-template-columns: 0px minmax(0, 1fr) 0px;
   grid-template-rows: 0px repeat(5, minmax(0, 1fr)) 0px 0px;
   grid-template-areas:
@@ -38,19 +39,18 @@
      since cap height runs ~70% of font-size for common typefaces) — a
      bigger ratio than size/6 reads better against that. This is a
      proportional *default*, not an enforced minimum — deliberately no
-     clamp here. A hard floor would make labels outsize small icons (a
-     real problem we hit and reverted), and consumers who need a
-     guaranteed size for specific content can just style that content
-     directly (icon/modifierTop/modifierBottom/amplifiers all accept
-     arbitrary ReactNode) rather than rely on this ratio to guarantee it.
+     clamp here, since a hard floor would make labels outsize small icons.
+     Consumers who need a guaranteed size for specific content can just
+     style that content directly (icon/modifierTop/modifierBottom/
+     amplifiers all accept arbitrary ReactNode) rather than rely on this
+     ratio to guarantee it.
 
-     size/5, not bigger (e.g. the size/3 tried first): a HARD ceiling, not
-     just a preference — L0-L4/R0-R4 share the frame's height across 5
-     equal rows (see grid-template-rows above), so amplifier font-size
-     (0.7em of this) must stay under roughly size/5 or adjacent amplifiers
-     in the same column collide. Caught by the pairwise-overlap test in
-     gridLayout.browser.test.tsx when size/3 was tried — that test exists
-     for exactly this. */
+     size/5 is also a hard ceiling, not just a preference: L0-L4/R0-R4
+     share the frame's height across 5 equal rows (see grid-template-rows
+     above), so amplifier font-size (0.7em of this) must stay under
+     roughly size/5 or adjacent amplifiers in the same column collide —
+     the pairwise-overlap test in gridLayout.browser.test.tsx verifies
+     this ratio holds. */
   font-size: calc(var(--ictk-size, 64px) / 5);
 }
 
@@ -72,12 +72,6 @@
      regardless. */
   overflow: visible;
 }
-
-/* Shape styling (border-radius, clip-path, ...) lives on each frame
-   component via FrameBase's `style` prop, not here — keeps every frame's
-   shape definition colocated with the component, so a third-party frame
-   package needs zero knowledge of this stylesheet beyond the .ictk-frame
-   class FrameBase already applies. */
 
 /* Shares .ictk-frame's grid cell (grid-area: frame) but is a separate
    sibling in the DOM, painted on top of the frame — see IconCore.tsx and

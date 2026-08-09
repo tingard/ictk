@@ -1,4 +1,3 @@
-import { memo } from 'react';
 import type { CSSProperties } from 'react';
 import { AmplifierSlot } from './AmplifierSlot';
 import { IconCore } from './IconCore';
@@ -7,14 +6,12 @@ import type { IconProps } from './types';
 
 // 32px, not 64: closer to conventional map-marker sizing (Leaflet/Mapbox/
 // Google default pins run ~25-41px) and to what actually reads well at
-// typical viewing distance on a standard-DPI display. Safe to keep compact
-// because styles.css floors text at a legible minimum regardless of size —
-// see the .ictk-icon/.ictk-amplifier font-size comments.
+// typical viewing distance on a standard-DPI display.
 const DEFAULT_SIZE = 32;
 
 type IconRootStyle = CSSProperties & { '--ictk-size': string };
 
-export const Icon = memo(function Icon({
+export function Icon({
   frame,
   icon,
   modifierTop,
@@ -47,4 +44,4 @@ export const Icon = memo(function Icon({
         })}
     </div>
   );
-});
+}

@@ -68,7 +68,7 @@ See [`examples/maplibre`](./examples/maplibre) for a complete, running example w
 An icon is composed from five independent pieces:
 
 1. **Frame** — the overall backdrop shape (square, circle, hexagon, ...). A frame is a *pure* backdrop: it never receives or renders icon/modifier content, so every frame behaves identically regardless of shape.
-2. **Fill** — the frame's background: a solid CSS color, a gradient, an image, or texture-atlas coordinates.
+2. **Fill** — the frame's background: a solid CSS color or a gradient. (Image/texture-atlas backgrounds are deliberately out of scope — see [`Fill`](#fill).)
 3. **Icon** — the central glyph. Always rendered exactly centered in the frame, regardless of which modifiers are present.
 4. **Modifiers** — small content above (`modifierTop`) and below (`modifierBottom`) the icon, still inside the frame.
 5. **Amplifiers** — supporting text or sub-icons in 13 fixed positions around the frame's edges, keyed by position code.
@@ -103,9 +103,9 @@ The frame always renders at exactly `size x size`, anchored at its own center �
 | `HexagonFrame` | Flat-top hexagon | |
 | `DiamondFrame` | Diamond | An SVG `polygon`, not a `transform: rotate`d square, so content inside stays upright |
 | `CupFrame` | Flat top, rounded bottom | The sea-subsurface silhouette from NATO's own guidance |
-| `CapFrame` | Rounded top, flat bottom | The air silhouette from that same guidance; the inverse of `CupFrame` |
+| `CapFrame` | Rounded top, flat bottom | The air silhouette from NATO's own guidance for map icons; the inverse of `CupFrame` |
 
-Each accepts `fill` and `stroke` props (a `Fill` — solid color, gradient, image, or atlas coordinates — and a `Stroke`; see the API reference below).
+Each accepts `fill` and `stroke` props (a `Fill` — solid color or gradient — and a `Stroke`; see the API reference below).
 
 ICTK intentionally stops there. NATO's own guidance for map icons defines a much larger vocabulary of frame shapes — diamonds with corner ticks, houses, inverted houses, quatrefoils ("clovers"), and more (see `static/app6d-standard-identifiers.png` for the full reference table) — but ICTK isn't aiming for full parity with it. If you need full-fidelity military symbology, a dedicated library like [`milsymbol`](https://spatialillusions.com/milsymbol/) is a better fit. ICTK's value is being a lightweight, generalized composition system — and since a frame is just a component, nothing stops you from building the shapes you need yourself (see below).
 
@@ -127,7 +127,7 @@ export function HouseFrame({ fill, stroke }: Pick<FrameBaseProps, 'fill' | 'stro
 }
 ```
 
-`FrameBase` applies the `ictk-frame` class (grid placement and sizing within `<Icon />`), resolves `fill` into an SVG paint (a color, or a generated `<linearGradient>`/`<pattern>` for gradient/image/atlas fills), and renders `shape` — a normalized 0-100 viewBox coordinate space, so it scales correctly regardless of the icon's actual `size`. `shape` accepts `{ kind: 'rect', rx? }`, `{ kind: 'circle' }`, `{ kind: 'polygon', points }`, or `{ kind: 'path', d }`, matching the underlying SVG elements directly. This is deliberately the whole contract: it depends on nothing from `<Icon />` internals, so a set of custom frames (a full NATO-shape-vocabulary pack, a client-specific icon set, whatever) is easy to publish as its own separate package that depends on `@tingard/ictk` for `FrameBase`/`FrameBaseProps` and nothing else. `fill`/`stroke` are just `FrameBase`'s convenience, not something `<Icon />` requires — a custom frame is free to skip `FrameBase` entirely and render its own SVG/DOM, as long as it carries the `ictk-frame` class.
+`FrameBase` applies the `ictk-frame` class (grid placement and sizing within `<Icon />`), resolves `fill` into an SVG paint (a color, or a generated `<linearGradient>` for a gradient fill), and renders `shape` — a normalized 0-100 viewBox coordinate space, so it scales correctly regardless of the icon's actual `size`. `shape` accepts `{ kind: 'rect', rx? }`, `{ kind: 'circle' }`, `{ kind: 'polygon', points }`, or `{ kind: 'path', d }`, matching the underlying SVG elements directly. This is deliberately the whole contract: it depends on nothing from `<Icon />` internals, so a set of custom frames (a full NATO-shape-vocabulary pack, a client-specific icon set, whatever) is easy to publish as its own separate package that depends on `@tingard/ictk` for `FrameBase`/`FrameBaseProps` and nothing else. `fill`/`stroke` are just `FrameBase`'s convenience, not something `<Icon />` requires — a custom frame is free to skip `FrameBase` entirely and render its own SVG/DOM, as long as it carries the `ictk-frame` class.
 
 For any regular polygon (pentagon, octagon, whatever NATO shape you're missing), skip hand-plotting `points` and use `nGonPoints`, the same helper `SquareFrame`/`HexagonFrame` are built on:
 
@@ -141,7 +141,7 @@ export function PentagonFrame({ fill, stroke }: Pick<FrameBaseProps, 'fill' | 's
 }
 ```
 
-`nGonPoints(n, { cx, cy, radius, rotation })` places `n` vertices around a center (defaulting to the middle of the 0-100 box, radius 50 — touching the box edges), `rotation` in degrees along SVG's angle convention. It's worth noting `radius` is the distance to each *vertex* (the circumradius), not to an edge's midpoint — that's why `SquareFrame` uses `radius: 50 * Math.SQRT2` to reach the corners of an axis-aligned box, and it's why `SquareFrame` no longer has rounded corners (that used `<rect rx>`; a plain `polygon` can't round corners the same way).
+`nGonPoints(n, { cx, cy, radius, rotation })` places `n` vertices around a center (defaulting to the middle of the 0-100 box, radius 50 — touching the box edges), `rotation` in degrees along SVG's angle convention. It's worth noting `radius` is the distance to each *vertex* (the circumradius), not to an edge's midpoint — that's why `SquareFrame` uses `radius: 50 * Math.SQRT2` to reach the corners of an axis-aligned box. `SquareFrame` doesn't do rounded corners — a plain `polygon` can't round them the way `<rect rx>` can — so use `{ kind: 'rect', rx }` directly if you need that.
 
 ## Fail-loud, not silent
 
@@ -167,19 +167,10 @@ Oversized content (a modifier string too long for its icon, an amplifier that do
 ```ts
 type Fill =
   | string // any CSS color
-  | { type: 'gradient'; stops: { offset: number; color: string }[]; angle?: number }
-  | { type: 'image'; src: string }
-  | {
-      type: 'atlas';
-      src: string;
-      x: number;
-      y: number;
-      width: number;
-      height: number;
-      naturalWidth: number; // the atlas image's own pixel dimensions
-      naturalHeight: number;
-    };
+  | { type: 'gradient'; stops: { offset: number; color: string }[]; angle?: number };
 ```
+
+Deliberately solid-color/gradient only — image and texture-atlas backgrounds aren't in scope for `FrameBase`. Neither needs any of `FrameBase`'s machinery: an image-backed frame is just an `<img>`/`<canvas>` positioned under a transparent frame, or a fully custom frame (see [Extending: custom frames](#extending-custom-frames)) rendering its own `<pattern>` fill with whatever cropping/aspect-ratio behavior it needs.
 
 ### `Stroke`
 

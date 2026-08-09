@@ -120,10 +120,10 @@ describe('Icon grid layout (real browser)', () => {
   );
 
   it('keeps every amplifier slot visually distinct from its siblings, not overlapping', async () => {
-    // Caught a real bug: B0 and B1 are both 0-height grid rows at the same
-    // line, so without an explicit offset on B1 they rendered fully
-    // overlapping — same-content boxes passed every other check here since
-    // each slot was individually still "outside the icon box".
+    // B0 and B1 are both 0-height grid rows at the same line, so without an
+    // explicit offset on B1 they'd render fully overlapping — same-content
+    // boxes would pass every other check here since each slot is
+    // individually still "outside the icon box".
     const markup = renderToStaticMarkup(
       <Icon
         frame={<SquareFrame fill="#ff0000" />}
@@ -158,13 +158,13 @@ describe('Icon grid layout (real browser)', () => {
   });
 
   it('scales font-size proportionally with no floor/clamp', async () => {
-    // Deliberately no legibility floor here (e.g. max(15px, ...)) — tried
-    // that, and it made amplifier labels render bigger than small icons
-    // (a real, visually broken result at size=24-48). Text size is a
-    // proportional *default*, not a guaranteed minimum: consumers who need
-    // a specific legible size for their own content can just style that
-    // content directly, since icon/modifierTop/modifierBottom/amplifiers
-    // all accept arbitrary ReactNode.
+    // Deliberately no legibility floor here (e.g. max(15px, ...)): a floor
+    // would render amplifier labels bigger than small icons, visually
+    // broken at size=24-48. Text size is a proportional *default*, not a
+    // guaranteed minimum: consumers who need a specific legible size for
+    // their own content can just style that content directly, since
+    // icon/modifierTop/modifierBottom/amplifiers all accept arbitrary
+    // ReactNode.
     for (const size of [8, 32, 64, 128]) {
       const markup = renderToStaticMarkup(
         <Icon
@@ -191,12 +191,14 @@ describe('Icon grid layout (real browser)', () => {
   });
 
   it('keeps icon-content centered in the frame regardless of which modifiers are present', async () => {
-    // Caught a real bug: flex-direction: column + justify-content: center
-    // centers whichever children happen to be present as a group, so with
-    // only modifierTop the [modifierTop, icon] pair got centered together
-    // and the icon sat below true center. Reference:
-    // static/app6d-icons-and-modifiers-location.png — MAIN never moves
-    // whether 1, 2, both, or neither of the modifiers are shown.
+    // flex-direction: column + justify-content: center would center
+    // whichever children happen to be present as a group — with only
+    // modifierTop, the [modifierTop, icon] pair would center together and
+    // the icon would sit below true center. Independent absolute
+    // positioning (see .ictk-icon-content in styles.css) avoids that.
+    // Reference: static/app6d-icons-and-modifiers-location.png — MAIN
+    // never moves whether 1, 2, both, or neither of the modifiers are
+    // shown.
     async function centerOffset(modifiers: { top?: boolean; bottom?: boolean }) {
       const markup = renderToStaticMarkup(
         <Icon

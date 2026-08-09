@@ -1,4 +1,4 @@
-import { HexagonFrame, Icon } from '@tingard/ictk';
+import { Icon, SquareFrame } from '@tingard/ictk';
 import '@tingard/ictk/style.css';
 // maplibre-gl v6 dropped the default `maplibregl` export in favor of named
 // exports (Map, Marker, ...) — no more `import maplibregl from 'maplibre-gl'`.
@@ -112,7 +112,7 @@ for (const receiver of makeReceiverGrid()) {
   createRoot(el).render(
     <Icon
       size={40}
-      frame={<HexagonFrame fill="#2f6fe0" stroke={{ color: 'white', width: 2 }} />}
+      frame={<SquareFrame fill="#2f6fe0" stroke={{ color: 'white', width: 2 }} />}
       modifierBottom={<span style={{ color: 'white' }}>{receiver.id}</span>}
       icon={
         <IconifyIcon
@@ -156,14 +156,13 @@ const movingMarker = new Marker({ element: movingEl, anchor: 'center' })
 function renderMovingUnit(bearing: number) {
   movingRoot.render(
     <Icon
-      size={64}
+      size={48}
       frame={
         <IconifyIcon
           icon="ic:outline-airplanemode-active"
           height="none"
+          className="ictk-frame"
           style={{
-            width: '64px',
-            height: '64px',
             transform: `rotate(${bearing}deg)`,
             color: 'white',
           }}
@@ -184,6 +183,7 @@ renderMovingUnit(0);
 
 let segment = 0;
 let t = 0;
+
 const STEP = 0.01; // fraction of the current route segment per tick
 
 setInterval(() => {

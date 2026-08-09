@@ -9,8 +9,8 @@ interface AmplifierSlotProps {
 
 /**
  * Memoized so that updating one amplifier's content doesn't re-render sibling
- * slots — bailout relies on the caller (Icon) preserving referential stability
- * for the amplifiers it didn't change (see Amplifiers type in types.ts).
+ * slots — bailout relies on the caller preserving referential stability for
+ * the amplifiers it didn't change (see Icon.test.tsx for a worked example).
  */
 export const AmplifierSlot = memo(function AmplifierSlot({
   position,
