@@ -2,6 +2,10 @@
   "name": "@tingard/ictk",
   "version": "0.0.1",
   "description": "Composable, interactive map-marker icons for MapLibre GL and deck.gl, generalized from NATO's own guidance for map icons.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tingard/ictk.git"
+  },
   "keywords": [
     "react",
     "react-component",
