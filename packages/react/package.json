@@ -24,7 +24,7 @@
     "nato"
   ],
   "type": "module",
-  "sideEffects": ["*.css"],
+  "sideEffects": ["**/*.css"],
   "publishConfig": {
     "access": "public"
   },
@@ -37,7 +37,8 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/ictk-react.js"
     },
-    "./style.css": "./dist/style.css"
+    "./style.css": "./dist/style.css",
+    "./package.json": "./package.json"
   },
   "scripts": {
     "build": "vite build && node ../../scripts/fix-dts-extensions.mjs dist && node scripts/copy-css.mjs",
