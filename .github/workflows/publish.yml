@@ -17,7 +17,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm --filter @ictk/conformance exec playwright install --with-deps chromium
 
       - run: pnpm typecheck
 
@@ -25,10 +25,14 @@ jobs:
 
       - run: pnpm test
 
-      - run: pnpm version "${GITHUB_REF_NAME#v}" --no-git-tag-version
+      - run: pnpm smoke
+
+      # Fixed versioning: all three packages release together at the tag's version.
+      - run: node scripts/set-version.mjs "${GITHUB_REF_NAME#v}"
 
       - run: pnpm build
 
-      - run: pnpm publish --no-git-checks --access public --provenance
+      # pnpm publishes in dependency order (core first) and swaps workspace:* for the exact version.
+      - run: pnpm --filter "@tingard/*" publish --no-git-checks --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

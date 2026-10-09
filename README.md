@@ -1,10 +1,10 @@
 # ICTK
 
-**ICTK** (ICon ToolKit) is a React component library for composing map-marker icons — frame, fill, center icon, modifiers, and amplifiers — loosely generalized from NATO's own guidance for map icons. It's built for one specific job: dropping real, interactive icons onto WebGL map libraries like [MapLibre GL JS](https://maplibre.org/) and [deck.gl](https://deck.gl/) as live DOM markers, not rasterized bitmaps.
+**ICTK** (ICon ToolKit) is a component library, with React and Svelte 5 bindings, for composing map-marker icons — frame, fill, center icon, modifiers, and amplifiers — loosely generalized from NATO's own guidance for map icons. It's built for one specific job: dropping real, interactive icons onto WebGL map libraries like [MapLibre GL JS](https://maplibre.org/) and [deck.gl](https://deck.gl/) as live DOM markers, not rasterized bitmaps.
 
 ```tsx
-import { Icon, SquareFrame } from '@tingard/ictk';
-import '@tingard/ictk/style.css';
+import { Icon, SquareFrame } from '@tingard/ictk-react';
+import '@tingard/ictk-react/style.css';
 
 <Icon
   frame={<SquareFrame fill="#c0392b" />}
@@ -18,6 +18,48 @@ import '@tingard/ictk/style.css';
 <p align="center"><img src="./static/dartmoor-demo.gif" alt="A grid of ICTK icons on a real MapLibre map over Dartmoor, showing live signal/battery status amplifiers and one moving unit whose bearing arrow rotates in real time" width="640" /></p>
 
 <p align="center"><em>The <a href="./examples/maplibre">examples/maplibre</a> app, running — every icon above is a real <code>maplibregl.Marker</code>, not a mockup.</em></p>
+
+## Packages
+
+ICTK is a monorepo of three published packages. Fixed versioning: they release together.
+
+| Package | For |
+|---|---|
+| [`@tingard/ictk-react`](./packages/react) | React 18+. `npm i @tingard/ictk-react` |
+| [`@tingard/ictk-svelte`](./packages/svelte) | Svelte 5+ only (snippets and runes). `npm i @tingard/ictk-svelte` |
+| [`@tingard/ictk-core`](./packages/core) | Framework-free pieces both bindings share: the stylesheet, shared types, `nGonPoints`, built-in frame geometry. Installed automatically; depend on it directly only to build a frame pack for several frameworks. |
+
+Both bindings render the same DOM and use the same stylesheet; a conformance suite (`packages/conformance`) checks that in real Chromium on every change. The examples in this README are React; the Svelte differences are below.
+
+## Using it from Svelte
+
+Svelte has no "element as a value", so content props take **snippets**, or plain strings/numbers for the common text case:
+
+```svelte
+<script lang="ts">
+  import { Icon, SquareFrame } from '@tingard/ictk-svelte';
+  import '@tingard/ictk-svelte/style.css';
+</script>
+
+<Icon size={40} icon="A" modifierTop="1" amplifiers={{ T: 'Alpha', R0: 'x2' }}>
+  {#snippet frame()}
+    <SquareFrame fill="#c0392b" />
+  {/snippet}
+</Icon>
+```
+
+Mounting into a map marker uses Svelte's `mount`. To update a live marker, pass a `$state` object (from a `.svelte.ts` file) as the props — assigning to it updates the mounted component in place:
+
+```ts
+import { mount } from 'svelte';
+import { Marker } from 'maplibre-gl';
+
+const el = document.createElement('div');
+mount(MyMarker, { target: el, props: state }); // `state = $state({ bearing: 0 })`
+new Marker({ element: el, anchor: 'center' }).setLngLat([2.35, 48.86]).addTo(map);
+```
+
+See [`examples/maplibre-svelte`](./examples/maplibre-svelte) for a full example, including a custom frame and a live-updating moving unit. A custom Svelte frame is any markup carrying the `ictk-frame` class, or build on `FrameBase` (same `fill` / `stroke` / `shape` props as React).
 
 ## Is ICTK for you?
 
@@ -33,6 +75,8 @@ Consider something else if:
 
 ## Contents
 
+- [Packages](#packages)
+- [Using it from Svelte](#using-it-from-svelte)
 - [Is ICTK for you?](#is-ictk-for-you)
 - [Why real DOM markers](#why-real-dom-markers)
 - [Concepts](#concepts)
@@ -54,14 +98,14 @@ Because ICTK targets that DOM-marker path specifically, `<Icon />` is just a nor
 ```tsx
 import { createRoot } from 'react-dom/client';
 import { Marker } from 'maplibre-gl';
-import { Icon, SquareFrame } from '@tingard/ictk';
+import { Icon, SquareFrame } from '@tingard/ictk-react';
 
 const el = document.createElement('div');
 createRoot(el).render(<Icon frame={<SquareFrame fill="#c0392b" />} icon={<span>A</span>} />);
 new Marker({ element: el, anchor: 'center' }).setLngLat([2.35, 48.86]).addTo(map);
 ```
 
-See [`examples/maplibre`](./examples/maplibre) for a complete, running example with multiple markers, click handling, and notes on a couple of `maplibre-gl` v6 + Vite integration gotchas that had nothing to do with ICTK itself but are worth knowing about.
+See [`examples/maplibre`](./examples/maplibre) (React) and [`examples/maplibre-svelte`](./examples/maplibre-svelte) for a complete, running example with multiple markers, click handling, and notes on a couple of `maplibre-gl` v6 + Vite integration gotchas that had nothing to do with ICTK itself but are worth knowing about.
 
 ## Concepts
 
@@ -114,7 +158,7 @@ ICTK intentionally stops there. NATO's own guidance for map icons defines a much
 A frame is any component that renders something carrying the `ictk-frame` class — that's the only real requirement, and it's a runtime/CSS contract, not something TypeScript enforces. `FrameBase` is the supported way to satisfy it without needing to know that detail. Frame shapes are real SVG (`rect`/`circle`/`polygon`/`path`), not CSS `clip-path` on a `div` — a CSS `border` never follows an angular `clip-path` correctly (it's drawn on the element's original rectangular border-box regardless of the clip), while SVG `stroke` follows any shape's actual outline:
 
 ```tsx
-import { FrameBase, type FrameBaseProps } from '@tingard/ictk';
+import { FrameBase, type FrameBaseProps } from '@tingard/ictk-react';
 
 export function HouseFrame({ fill, stroke }: Pick<FrameBaseProps, 'fill' | 'stroke'>) {
   return (
@@ -127,12 +171,12 @@ export function HouseFrame({ fill, stroke }: Pick<FrameBaseProps, 'fill' | 'stro
 }
 ```
 
-`FrameBase` applies the `ictk-frame` class (grid placement and sizing within `<Icon />`), resolves `fill` into an SVG paint (a color, or a generated `<linearGradient>` for a gradient fill), and renders `shape` — a normalized 0-100 viewBox coordinate space, so it scales correctly regardless of the icon's actual `size`. `shape` accepts `{ kind: 'rect', rx? }`, `{ kind: 'circle' }`, `{ kind: 'polygon', points }`, or `{ kind: 'path', d }`, matching the underlying SVG elements directly. This is deliberately the whole contract: it depends on nothing from `<Icon />` internals, so a set of custom frames (a full NATO-shape-vocabulary pack, a client-specific icon set, whatever) is easy to publish as its own separate package that depends on `@tingard/ictk` for `FrameBase`/`FrameBaseProps` and nothing else. `fill`/`stroke` are just `FrameBase`'s convenience, not something `<Icon />` requires — a custom frame is free to skip `FrameBase` entirely and render its own SVG/DOM, as long as it carries the `ictk-frame` class.
+`FrameBase` applies the `ictk-frame` class (grid placement and sizing within `<Icon />`), resolves `fill` into an SVG paint (a color, or a generated `<linearGradient>` for a gradient fill), and renders `shape` — a normalized 0-100 viewBox coordinate space, so it scales correctly regardless of the icon's actual `size`. `shape` accepts `{ kind: 'rect', rx? }`, `{ kind: 'circle' }`, `{ kind: 'polygon', points }`, or `{ kind: 'path', d }`, matching the underlying SVG elements directly. This is deliberately the whole contract: it depends on nothing from `<Icon />` internals, so a set of custom frames (a full NATO-shape-vocabulary pack, a client-specific icon set, whatever) is easy to publish as its own separate package that depends on `@tingard/ictk-react` (or `-svelte`, or `-core` for the shared types) for `FrameBase`/`FrameBaseProps` and nothing else. `fill`/`stroke` are just `FrameBase`'s convenience, not something `<Icon />` requires — a custom frame is free to skip `FrameBase` entirely and render its own SVG/DOM, as long as it carries the `ictk-frame` class.
 
 For any regular polygon (pentagon, octagon, whatever NATO shape you're missing), skip hand-plotting `points` and use `nGonPoints`, the same helper `SquareFrame`/`HexagonFrame` are built on:
 
 ```tsx
-import { FrameBase, nGonPoints, type FrameBaseProps } from '@tingard/ictk';
+import { FrameBase, nGonPoints, type FrameBaseProps } from '@tingard/ictk-react';
 
 const PENTAGON_POINTS = nGonPoints(5, { rotation: -90 }); // point straight up
 
@@ -153,7 +197,7 @@ Oversized content (a modifier string too long for its icon, an amplifier that do
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `frame` | `ReactElement` | *required* | A built-in frame or any custom component satisfying the `ictk-frame` contract. |
+| `frame` | `ReactElement` (Svelte: `Snippet`) | *required* | A built-in frame or any custom component satisfying the `ictk-frame` contract. |
 | `icon` | `ReactNode` | — | Centered content. |
 | `modifierTop` | `ReactNode` | — | |
 | `modifierBottom` | `ReactNode` | — | |
@@ -199,31 +243,36 @@ type FrameShape =
 
 ## Development
 
-This is a pnpm workspace: the library lives at the repo root (`ictk`), with runnable examples under `examples/`.
+This is a pnpm workspace: `packages/` holds the published packages (`core`, `react`, `svelte`) and the private test packages (`conformance`, `smoke`); runnable examples live under `examples/`.
 
 ```sh
 pnpm install
 
-pnpm --filter @tingard/ictk typecheck
-pnpm --filter @tingard/ictk lint
-pnpm --filter @tingard/ictk test        # vitest (jsdom component tests) + real-Chromium
-                                # Playwright tests for every CSS Grid layout
-                                # invariant — box size never grows with
-                                # content, amplifiers never overlap, the icon
-                                # stays centered regardless of modifiers.
-                                # jsdom alone can't catch any of these; it
-                                # doesn't do real layout. (Chromium only for
-                                # now — see "Is ICTK for you?" above.)
-pnpm --filter @tingard/ictk build
+pnpm typecheck   # builds first — bindings consume core's built output
+pnpm lint
+pnpm test        # builds first; unit tests per package, plus the conformance suite:
+                 # real-Chromium Playwright tests, run against *both* bindings' built
+                 # output, for every CSS Grid layout invariant (box size never grows
+                 # with content, amplifiers never overlap, the icon stays centered)
+                 # and a normalized-DOM parity check so React and Svelte can't drift.
+                 # jsdom alone can't catch any of these; it doesn't do real layout.
+                 # (Chromium only for now — see "Is ICTK for you?" above.)
+pnpm smoke       # slow, needs network: packs the three packages, installs the tarballs
+                 # into fresh projects with plain npm, and checks they typecheck (Bundler
+                 # and NodeNext), build, server-render and hydrate with no warnings.
+pnpm build
 
-pnpm --filter @ictk/example-maplibre dev   # live example at localhost:5173
+pnpm --filter @ictk/example-maplibre dev          # React example, localhost:5173
+pnpm --filter @ictk/example-maplibre-svelte dev   # Svelte example
 ```
+
+First-time setup for the browser tests: `pnpm --filter @ictk/conformance exec playwright install chromium`.
 
 Dependency versions are gated by a 14-day `minimumReleaseAge` policy in `pnpm-workspace.yaml` (a cheap, high-leverage defense against supply-chain attacks — most malicious npm releases are caught and yanked within days), and install/postinstall scripts are denied by default except for an explicit `allowBuilds` allowlist.
 
 ## Status and non-goals
 
-- **Pre-1.0, not yet published to npm. License not finalized** (leaning MIT).
+- **Pre-1.0.** MIT licensed (see [LICENSE](./LICENSE)).
 - **Not aiming for full parity with NATO's own guidance for map icons** — see [Built-in frames](#built-in-frames). This is a deliberate, standing scope decision, not a "not implemented yet."
 - **Tested in real Chromium via Playwright, not yet cross-browser** — see [Is ICTK for you?](#is-ictk-for-you).
 - **One anchor mode only** (frame center) — see [Sizing and anchoring](#sizing-and-anchoring).

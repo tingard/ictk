@@ -1,5 +1,5 @@
 packages:
-  - .
+  - packages/*
   - examples/*
 
 # Only these packages' install/postinstall scripts are allowed to run.
@@ -14,3 +14,12 @@ allowBuilds:
 # releases have time to be caught and yanked before we can pull them in.
 # 14 days * 24h * 60m = 20160 minutes.
 minimumReleaseAge: 20160
+
+# @testing-library/jest-dom/vitest imports `vitest` but doesn't declare it as
+# a peer, so under pnpm's strict layout it can only find vitest if vitest is
+# hoisted to the workspace root. Declaring the peer makes pnpm link the
+# consuming package's own vitest into jest-dom's resolution context.
+packageExtensions:
+  '@testing-library/jest-dom':
+    peerDependencies:
+      vitest: '*'

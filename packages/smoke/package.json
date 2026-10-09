@@ -1,0 +1,13 @@
+{
+  "name": "@ictk/smoke",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Packs the publishable packages, installs the tarballs into fresh projects outside the workspace with plain npm, and checks they typecheck, build, server-render and hydrate — the things a workspace-linked test can't see.",
+  "scripts": {
+    "smoke": "node src/run.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.0"
+  }
+}

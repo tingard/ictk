@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "verbatimModuleSyntax": true,
+    "types": ["node", "svelte"]
+  },
+  "include": ["src"]
+}
