@@ -1,0 +1,38 @@
+{
+  "name": "@tingard/ictk-core",
+  "version": "0.0.1",
+  "description": "Framework-agnostic core for ICTK: stylesheet, shared types and helpers used by the React and Svelte bindings.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tingard/ictk.git",
+    "directory": "packages/core"
+  },
+  "keywords": ["map", "map-marker", "marker", "icon", "gis", "nato"],
+  "type": "module",
+  "sideEffects": ["*.css"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": ["dist", "src/styles.css"],
+  "main": "./dist/ictk-core.js",
+  "module": "./dist/ictk-core.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/ictk-core.js"
+    },
+    "./style.css": "./src/styles.css"
+  },
+  "scripts": {
+    "build": "vite build && node ../../scripts/fix-dts-extensions.mjs dist",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0",
+    "vite-plugin-dts": "^4.2.0",
+    "vitest": "^2.1.0"
+  }
+}

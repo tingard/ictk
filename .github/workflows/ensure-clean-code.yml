@@ -15,10 +15,14 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm --filter @ictk/conformance exec playwright install --with-deps chromium
 
       - run: pnpm typecheck
 
       - run: pnpm lint
 
       - run: pnpm test
+
+      # Packs the three packages, installs the tarballs into fresh projects with
+      # plain npm, and typechecks/builds/hydrates them — see packages/smoke.
+      - run: pnpm smoke

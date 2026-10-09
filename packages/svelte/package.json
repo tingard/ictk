@@ -1,0 +1,64 @@
+{
+  "name": "@tingard/ictk-svelte",
+  "version": "0.0.1",
+  "description": "Composable, interactive map-marker icons for MapLibre GL and deck.gl, generalized from NATO's own guidance for map icons. Svelte 5 bindings.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tingard/ictk.git",
+    "directory": "packages/svelte"
+  },
+  "keywords": [
+    "svelte",
+    "svelte5",
+    "maplibre",
+    "maplibre-gl",
+    "map",
+    "map-marker",
+    "marker",
+    "icon",
+    "map-icon",
+    "gis",
+    "geospatial",
+    "military-symbology",
+    "nato"
+  ],
+  "type": "module",
+  "sideEffects": ["**/*.css"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": ["dist"],
+  "svelte": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "svelte": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./style.css": "./dist/style.css"
+  },
+  "scripts": {
+    "build": "svelte-package -i src/lib -o dist && node scripts/copy-css.mjs",
+    "test": "vitest run",
+    "typecheck": "svelte-check --tsconfig ./tsconfig.json"
+  },
+  "dependencies": {
+    "@tingard/ictk-core": "workspace:*"
+  },
+  "peerDependencies": {
+    "svelte": "^5.20.0"
+  },
+  "devDependencies": {
+    "@sveltejs/package": "^2.5.8",
+    "@sveltejs/vite-plugin-svelte": "^4.0.4",
+    "@testing-library/jest-dom": "^6.5.0",
+    "@testing-library/svelte": "^5.2.0",
+    "jsdom": "^25.0.0",
+    "svelte": "^5.20.0",
+    "svelte-check": "^4.0.0",
+    "vite": "^5.4.0",
+    "vitest": "^2.1.0"
+  }
+}

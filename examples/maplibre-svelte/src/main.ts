@@ -1,10 +1,8 @@
-import { Icon, SquareFrame } from '@tingard/ictk-react';
-import '@tingard/ictk-react/style.css';
+import '@tingard/ictk-svelte/style.css';
 // maplibre-gl v6 dropped the default `maplibregl` export in favor of named
 // exports (Map, Marker, ...) — no more `import maplibregl from 'maplibre-gl'`.
 import { Map as MapLibreMap, Marker, setWorkerUrl } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { Icon as IconifyIcon } from '@iconify/react';
 // Under Vite, MapLibre's own worker-resolution fails silently (the error
 // surfaces in the worker's own DevTools console context, not the main
 // page's) — no style/tile requests ever fire and there's no visible error
@@ -12,15 +10,17 @@ import { Icon as IconifyIcon } from '@iconify/react';
 // of this as a bundled worker script"; setWorkerUrl points MapLibre at it
 // explicitly instead of letting it guess.
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
-import { createRoot } from 'react-dom/client';
+import { mount } from 'svelte';
+import MovingUnit from './MovingUnit.svelte';
+import ReceiverNode from './Receiver.svelte';
 import { type LngLat, bearingBetween, lerpLngLat } from './geo';
-import { BatteryIcon, SignalBars } from './statusIcons';
+import { movingUnit } from './movingUnit.svelte';
 
 setWorkerUrl(workerUrl);
 
 // The whole point of this example: ICTK's <Icon /> mounts as a plain DOM
 // node inside maplibregl.Marker's `element` — no rasterization, no texture
-// atlas, just a real React tree that MapLibre repositions on pan/zoom. This
+// atlas, just a real Svelte component tree that MapLibre repositions on pan/zoom. This
 // scenario: a Meshtastic-style LoRa mesh of fixed receiver nodes scattered
 // over Dartmoor, each showing live-looking signal/battery status via
 // amplifier slots, plus one moving unit which has updating amplifiers and an
@@ -109,28 +109,10 @@ for (const receiver of makeReceiverGrid()) {
     statusEl.textContent = `Node ${receiver.id}: signal ${receiver.signal}/4, battery ${receiver.battery}%`;
   });
 
-  createRoot(el).render(
-    <Icon
-      size={40}
-      frame={<SquareFrame fill="#2f6fe0" stroke={{ color: 'white', width: 2 }} />}
-      modifierBottom={<span style={{ color: 'white' }}>{receiver.id}</span>}
-      icon={
-        <IconifyIcon
-          icon="icon-park-outline:receiver"
-          height="none"
-          style={{
-            width: '12px',
-            height: '12px',
-            color: 'white',
-          }}
-        />
-      }
-      amplifiers={{
-        L0: <SignalBars strength={receiver.signal} />,
-        L4: <BatteryIcon level={receiver.battery} />,
-      }}
-    />,
-  );
+  mount(ReceiverNode, {
+    target: el,
+    props: { id: receiver.id, signal: receiver.signal, battery: receiver.battery },
+  });
 
   new Marker({ element: el, anchor: 'center' }).setLngLat(receiver.lngLat).addTo(map);
 }
@@ -148,38 +130,12 @@ const route: LngLat[] = [
 
 const movingEl = document.createElement('div');
 movingEl.dataset.testUnit = 'moving-unit';
-const movingRoot = createRoot(movingEl);
+// Mounted once; the component reads `movingUnit.bearing`, so assigning to it
+// below updates the live component in place rather than re-mounting.
+mount(MovingUnit, { target: movingEl, props: movingUnit });
 const movingMarker = new Marker({ element: movingEl, anchor: 'center' })
-  .setLngLat(route[0])
+  .setLngLat(route[0] as LngLat) // route is a non-empty literal
   .addTo(map);
-
-function renderMovingUnit(bearing: number) {
-  movingRoot.render(
-    <Icon
-      size={48}
-      frame={
-        <IconifyIcon
-          icon="ic:outline-airplanemode-active"
-          height="none"
-          className="ictk-frame"
-          style={{
-            transform: `rotate(${bearing}deg)`,
-            color: 'white',
-          }}
-        />
-      }
-      amplifiers={{
-        R4: (
-          <span style={{ backgroundColor: 'white', padding: '3px' }}>
-            {bearing.toFixed(1)}&deg;
-          </span>
-        ),
-        R1: <span style={{ backgroundColor: 'white', padding: '3px' }}>100kts</span>,
-      }}
-    />,
-  );
-}
-renderMovingUnit(0);
 
 let segment = 0;
 let t = 0;
@@ -192,7 +148,7 @@ setInterval(() => {
   if (!from || !to) return;
 
   movingMarker.setLngLat(lerpLngLat(from, to, t));
-  renderMovingUnit(bearingBetween(from, to));
+  movingUnit.bearing = bearingBetween(from, to);
 
   t += STEP;
   if (t >= 1) {

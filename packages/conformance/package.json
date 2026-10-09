@@ -1,0 +1,29 @@
+{
+  "name": "@ictk/conformance",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Runs the same real-Chromium layout assertions against every ICTK framework binding's built output, and checks their markup stays in step.",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit && svelte-check --tsconfig ./tsconfig.json"
+  },
+  "dependencies": {
+    "@tingard/ictk-core": "workspace:*",
+    "@tingard/ictk-react": "workspace:*",
+    "@tingard/ictk-svelte": "workspace:*",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "svelte": "^5.20.0"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^4.0.4",
+    "@types/node": "^26.1.1",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "playwright": "^1.62.0",
+    "svelte-check": "^4.0.0",
+    "vite": "^5.4.0",
+    "vitest": "^2.1.0"
+  }
+}
