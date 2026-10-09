@@ -10,7 +10,7 @@
   },
   "keywords": ["map", "map-marker", "marker", "icon", "gis", "nato"],
   "type": "module",
-  "sideEffects": ["*.css"],
+  "sideEffects": ["**/*.css"],
   "publishConfig": {
     "access": "public"
   },
@@ -23,7 +23,8 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/ictk-core.js"
     },
-    "./style.css": "./src/styles.css"
+    "./style.css": "./src/styles.css",
+    "./package.json": "./package.json"
   },
   "scripts": {
     "build": "vite build && node ../../scripts/fix-dts-extensions.mjs dist",

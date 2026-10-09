@@ -19,8 +19,11 @@ export function useFillPaint(fill: Fill | undefined): { paint: string; defs: Rea
     defs:
       resolved.kind === 'gradient' ? (
         <linearGradient id={id} gradientTransform={resolved.transform}>
-          {resolved.stops.map((s) => (
-            <stop key={s.offset} offset={s.offset} stopColor={s.color} />
+          {resolved.stops.map((s, i) => (
+            // Index key: stops are an ordered list and two may legitimately
+            // share an offset (a hard-edge gradient), so offset isn't unique.
+            // biome-ignore lint/suspicious/noArrayIndexKey: see above
+            <stop key={i} offset={s.offset} stopColor={s.color} />
           ))}
         </linearGradient>
       ) : null,
